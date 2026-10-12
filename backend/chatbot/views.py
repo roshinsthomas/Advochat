@@ -82,3 +82,49 @@ class SearchView(APIView):
             "source_scope": "historical_development_sample",
             "results": results,
         })
+
+@lru_cache(maxsize=1)
+def get_answer_service():
+    from .services.answer_service import AnswerService
+
+    return AnswerService()
+
+
+class ChatView(SearchView):
+    def post(self, request):
+        # Reuse the search endpoint's validation and retrieval.
+        search_response = super().post(request)
+
+        if search_response.status_code != status.HTTP_200_OK:
+            return search_response
+
+        query = search_response.data["query"]
+        results = search_response.data["results"]
+
+        try:
+            generated = get_answer_service().generate(
+                query=query,
+                results=results,
+            )
+
+        except Exception as exc:
+            # Log the error type without exposing credentials or prompts.
+            logger.error(
+                "Answer generation failed: %s",
+                type(exc).__name__,
+            )
+
+            return Response(
+                {
+                    "detail": (
+                        "Answer generation is unavailable. "
+                        "Check the API configuration, quota, and connection."
+                    )
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({
+            "query": query,
+            **generated,
+        })
