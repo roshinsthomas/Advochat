@@ -27,3 +27,6 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Downloaded documents and generated local data
+/backend/data
