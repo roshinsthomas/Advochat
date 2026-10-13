@@ -12,3 +12,8 @@ class SearchRequestSerializer(serializers.Serializer):
         min_value=1,
         max_value=5,
     )
+class ChatRequestSerializer(SearchRequestSerializer):
+    conversation_id = serializers.UUIDField(
+        required=False,
+        allow_null=True,
+    )

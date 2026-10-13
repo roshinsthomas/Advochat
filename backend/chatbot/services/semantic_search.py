@@ -3,6 +3,7 @@ import chromadb
 from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 from django.conf import settings
 from sentence_transformers import CrossEncoder
+from .section_lookup import SectionLookup, extract_section_numbers
 
 
 class SemanticSearchService:
@@ -36,6 +37,11 @@ class SemanticSearchService:
             raise ValueError(
                 "Use 1 <= limit <= candidate_count."
             )
+        
+        section_numbers = extract_section_numbers(query)
+
+        if section_numbers:
+            return SectionLookup(self.collection).fetch(section_numbers)
 
         count = self.collection.count()
 
